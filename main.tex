@@ -1,0 +1,362 @@
+%% ============================================================
+%%  CV TEMPLATE — two-column academic/industry CV
+%%  Compile with: pdflatex CV_Template.tex
+%%  Requires packages: paracol, fontawesome5, tikz, pgffor,
+%%                     roboto (or any sfdefault font), hyperref
+%%  NOTE: replace "photo.jpg" with your own image, or remove
+%%        the photo minipage in the header if you don't want one.
+%% ============================================================
+\documentclass[8pt,a4paper]{article}
+\usepackage{cmap}
+
+%% ── Geometry ────────────────────────────────────────────────
+\usepackage[top=1.3cm, bottom=1.3cm, left=0.7cm, right=0.7cm]{geometry}
+\usepackage{ragged2e}
+%% ── Fonts & Encoding ────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sfdefault,medium, scale=0.8]{roboto}   % clean sans-serif; swap for lato if preferred
+\usepackage[table]{xcolor}
+%% ── Colors ──────────────────────────────────────────────────
+\usepackage{xcolor}
+\definecolor{accentblue}{RGB}{0, 149, 255}
+\definecolor{highlightbg}{RGB}{252, 205,  90}
+\definecolor{dotgray}    {RGB}{190, 190, 190}
+\definecolor{rulegray}   {RGB}{180, 180, 180}
+
+%% ── Hyperlinks ──────────────────────────────────────────────
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, urlcolor=black, linkcolor=black}
+\usepackage[normalem]{ulem}
+%% ── Layout helpers ──────────────────────────────────────────
+\usepackage{paracol}          % two independent columns
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{calc}
+\usepackage{fontawesome5}
+%% ── TikZ (skill badges, language dots) ──────────────────────
+\usepackage{tikz}
+\usepackage{pgffor}
+\usepackage{eso-pic}
+%% ── Spacing tweaks ──────────────────────────────────────────
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\pagestyle{empty}
+
+\setlist[itemize]{
+  leftmargin=1.1em,
+  itemsep=0pt,
+  topsep=1pt,
+  parsep=0pt,
+  label={\tikz\fill[] circle (1.5pt);}
+}
+%% ────────────────────────────────────────────────────────────
+%%  CUSTOM COMMANDS
+%% ────────────────────────────────────────────────────────────
+
+%% Section header (bold caps + full-width rule)
+\newcommand{\cvsection}[1]{%
+  \vspace{10pt}%
+  {\Large\bfseries\MakeUppercase{#1}}\\[-8pt]%
+  {\rule{\linewidth}{1.5pt}}%
+  \vspace{1pt}%
+}
+
+%% Job / degree title
+\newcommand{\jobtitle}[1]{{\large\bfseries #1}}
+
+%% Company / institution in blue
+\newcommand{\company}[2][]{%
+  {\small\bfseries%
+  \ifx&#1&%
+    \textcolor{accentblue}{#2}%
+  \else%
+    \href{#1}{\textcolor{accentblue}{#2}}%
+  \fi}%
+}
+
+%% Grey italic qualifier line under a job title (FTE, contract nature, etc.)
+\newcommand{\rolenote}[1]{%
+  \vspace{1pt}{\footnotesize\textcolor{gray}{\textit{#1}}}\vspace{1pt}%
+}
+
+\definecolor{availbg}{HTML}{EAF6FB}   % pale tint of your accentblue
+
+%% Optional highlighted availability/callout box under the header
+\newcommand{\availability}[1]{%
+  \par\vspace{5pt}%
+  \noindent
+  \begin{tabular}{@{}!{\color{accentblue}\vrule width 2.2pt}p{\dimexpr0.52\linewidth \relax}@{}}
+    \cellcolor{availbg}\small #1
+  \end{tabular}%
+  \par\vspace{3pt}%
+}
+
+%% Date + place line
+\newcommand{\dateplace}[3]{%
+  \vspace{1pt}%
+  {\footnotesize\textcolor{gray}{%
+    \faBuilding\;#3%
+    \hspace{0.5em}%
+    \faMapMarker\;#2%
+    \hspace{0.5em}%
+    \faCalendar\;#1%
+  }}%
+  \vspace{1pt}%
+}
+
+%% Language proficiency dots (filled = blue, empty = gray)
+%% Usage: \langdots{<filled count>}
+\newcommand{\langdots}[1]{%
+  \foreach \x in {1,...,5}{%
+    \begin{tikzpicture}[baseline=0.55ex]
+      \ifnum\x>#1
+        \fill[dotgray] (0,0) circle (2pt);
+      \else
+        \fill[accentblue] (0,0) circle (2pt);
+      \fi
+    \end{tikzpicture}\hspace{0.5pt}%
+  }%
+}
+
+%% Skill badge (rounded-rectangle tag)
+\newcommand{\skillbadge}[1]{%
+  \begin{tikzpicture}[baseline=(t.base)]
+    \node[draw=dotgray, rounded corners=2.5pt,
+          inner xsep=5pt, inner ysep=3pt,
+          font=\small\sffamily](t){#1};
+  \end{tikzpicture}\hspace{1pt}%
+}
+
+%% Highlighted text block (orange/yellow background)
+%% Usage: \highlight{text}
+\newcommand{\highlight}[1]{%
+  \colorbox{highlightbg}{\parbox{\dimexpr\linewidth-2\fboxsep}{#1}}%
+}
+
+%% Clickable underlined project bullet text
+\newcommand{\projlink}[2]{\href{#1}{\uline{#2}}}
+
+%% ────────────────────────────────────────────────────────────
+%%  DOCUMENT
+%% ────────────────────────────────────────────────────────────
+\begin{document}
+
+\vspace*{-1cm}
+
+\AddToShipoutPictureBG{%
+  \begin{tikzpicture}[overlay]
+    \useasboundingbox (0,0) rectangle (\paperwidth,\paperheight);
+    \definecolor{linegray}{RGB}{215,215,215}
+    % Top-right contour lines
+    \foreach \i in {0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}{
+      \pgfmathsetmacro{\wa}{2.5 + 0.6*sin(\i*137)}
+      \pgfmathsetmacro{\wb}{1.5 + 0.5*cos(\i*97)}
+      \pgfmathsetmacro{\wc}{2.5 + 0.4*sin(\i*173)}
+      \pgfmathsetmacro{\wd}{1.5 + 0.6*cos(\i*113)}
+      \draw[linegray, line width=0.5pt]
+        (\paperwidth-1.5cm-\i cm, \paperheight)
+        .. controls
+           (\paperwidth-\wa cm-\i cm, \paperheight-\wb cm-\i cm) and
+           (\paperwidth-\wc cm, \paperheight-\wd cm-\i cm) ..
+        (\paperwidth, \paperheight-1.5cm-\i cm);
+    }
+    % Bottom-left contour lines
+    \foreach \i in {0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}{
+      \pgfmathsetmacro{\wa}{2.5 + 0.6*sin(\i*137)}
+      \pgfmathsetmacro{\wb}{1.5 + 0.5*cos(\i*97)}
+      \pgfmathsetmacro{\wc}{2.5 + 0.4*sin(\i*173)}
+      \pgfmathsetmacro{\wd}{1.5 + 0.6*cos(\i*113)}
+      \draw[linegray, line width=0.5pt]
+        (1.5cm+\i cm, 0)
+        .. controls
+           (\wa cm+\i cm, \wb cm+\i cm) and
+           (\wc cm, \wd cm+\i cm) ..
+        (0, 1.5cm+\i cm);
+    }
+  \end{tikzpicture}%
+}
+%% ── HEADER ──────────────────────────────────────────────────
+\begin{minipage}[c]{0.76\textwidth}
+  {\fontsize{26}{30}\selectfont\bfseries YOUR NAME}\\[5pt]
+  {\large\color{accentblue}\bfseries Your Professional Tagline / Title}\\[7pt]
+  {\small
+    \faAt\,\href{mailto:you@example.com}{you@example.com}%
+    \quad\textperiodcentered\quad
+   \faGithub\,\href{https://github.com/yourusername}%
+         {Github}%
+    \quad\textperiodcentered\quad
+   \faLinkedin\,\href{https://www.linkedin.com/in/yourprofile}%
+         {Linkedin}%
+     \quad\textperiodcentered\quad
+     \faPhone
+     +00 000 00 000
+    \quad\textperiodcentered\quad
+    Your City, Country%
+  }
+
+%\availability{Add an optional callout line here, e.g. availability or key qualification}
+\end{minipage}%
+\begin{minipage}[c]{0.24\textwidth}
+  \raggedleft
+  %% Replace photo.jpg with your actual photo filename, or delete this minipage for no photo
+  \begin{tikzpicture}
+  \clip (0,0) circle (1.25cm); % Sets the circular crop area
+  \node at (0,0) {\includegraphics[width=2.5cm]{photo.jpg}}; % Centers the image
+\end{tikzpicture}
+\end{minipage}
+
+
+
+%% ── TWO-COLUMN BODY ─────────────────────────────────────────
+\columnratio{0.62}
+\setlength{\columnsep}{1.6em}
+\sloppy
+\begin{paracol}{2}
+\RaggedRight
+%% ════════════════════════════════════════════════════════════
+%%  LEFT COLUMN
+%% ════════════════════════════════════════════════════════════
+
+\cvsection{Summary}
+Write a short 2--4 sentence professional summary here: who you are, your core expertise, and what you're looking for.
+
+%% ── EXPERIENCE ──────────────────────────────────────────────
+\cvsection{Experience}
+\vspace{2pt}
+\vspace{4pt}
+\jobtitle{Job Title}\\
+\dateplace{MM/YYYY -- MM/YYYY}{City, Country}{\company[https://example.com]{Company Name}}
+%\rolenote{Optional note, e.g. part-time / contract details}
+\begin{itemize}
+\item \textbf{Key achievement or responsibility, bolded for emphasis.}
+  \item Another bullet describing scope, tools used, and impact
+  \item Another bullet with a quantified result where possible
+  \item Another bullet
+\end{itemize}
+\vspace{2pt}
+
+\jobtitle{Job Title}\\
+\dateplace{MM/YYYY -- MM/YYYY}{City, Country}{\company[https://example.com]{Company Name}}
+\begin{itemize}
+  \item \textbf{Key achievement or responsibility, bolded for emphasis.}
+  \item Bullet describing scope, tools used, and impact
+  \item Bullet with a quantified result where possible
+\end{itemize}
+\vspace{2pt}
+
+\jobtitle{Job Title}\\
+\dateplace{MM/YYYY -- Present}{City, Country}{\company[https://example.com]{Company Name}}
+\begin{itemize}
+  \item Bullet point
+  \item Bullet point
+\end{itemize}
+
+%% ── PUBLICATIONS ────────────────────────────────────────────
+\cvsection{Publications}
+
+{\small
+\href{https://example.com}{%
+  \textbf{Publication Title}}\\
+{\footnotesize\textcolor{accentblue}{Venue, Year --- optional note}}
+
+\vspace{4pt}
+\href{https://example.com}{%
+  \textbf{Publication Title}}\\
+{\footnotesize\textcolor{accentblue}{Venue, Year}}
+}
+
+
+
+
+
+%% ════════════════════════════════════════════════════════════
+%%  RIGHT COLUMN
+%% ════════════════════════════════════════════════════════════
+\switchcolumn
+
+%% ── SKILLS ──────────────────────────────────────────────────
+
+\cvsection{Skills}
+
+{\small\textbf{Category 1}}\\[3pt]
+\skillbadge{Skill}
+\skillbadge{Skill}
+\skillbadge{Skill}
+\skillbadge{Skill}
+\skillbadge{Skill}
+
+\vspace{5pt}
+{\small\textbf{Category 2}}\\[3pt]
+\skillbadge{Skill}
+\skillbadge{Skill}
+\skillbadge{Skill}
+\skillbadge{Skill}
+
+
+
+%% ── EDUCATION ───────────────────────────────────────────────
+\cvsection{Education}
+
+\jobtitle{Degree Title} · \company[https://example.com]{Institution}\\
+{\footnotesize\textcolor{gray}{\faCalendar\;MM/YYYY -- MM/YYYY \quad \faMapMarker\;City, Country}}\\
+
+\vspace{3pt}
+\jobtitle{Degree Title} · \company[https://example.com]{Institution}\\
+{\footnotesize\textcolor{gray}{\faCalendar\;MM/YYYY -- MM/YYYY \quad \faMapMarker\;City, Country}}\\
+
+\vspace{3pt}
+\jobtitle{Degree Title} · \company[https://example.com]{Institution}\\
+{\footnotesize\textcolor{gray}{\faCalendar\;MM/YYYY -- MM/YYYY \quad \faMapMarker\;City, Country}}
+
+%% ── AWARDS & GRANTS ─────────────────────────────────────────
+\cvsection{Awards and Grants}
+\vspace{3pt}
+{\large\textbf{Award Name --- Amount}}\\
+Short description of the award
+
+\vspace{3pt}
+{\large\textbf{Award Name --- Amount}}\\[3pt]
+Short description of the award
+
+%% ── TALKS ───────────────────────────────────────────────────
+\cvsection{Talks}
+
+\textbf{Talk Title}\\
+Event / context
+
+\vspace{2pt}
+\textbf{Talk Title}\\
+Event / context
+
+
+
+%% ── LANGUAGES ───────────────────────────────────────────────
+\cvsection{Languages}
+\renewcommand{\arraystretch}{1.1}
+%% 3 languages per row with compact dot size
+\begin{tabular}{@{}p{1.3cm}@{}p{1.05cm}@{\hspace{5pt}}p{1.3cm}@{}p{1.05cm}@{\hspace{5pt}}p{1.3cm}@{}p{1.05cm}@{}}
+  \parbox[c]{1.3cm}{\raggedright\textbf{Language}\\[-2pt]{\small Level}}
+    & \langdots{5}
+    & \parbox[c]{1.3cm}{\raggedright\textbf{Language}\\[-2pt]{\small Level}}
+    & \langdots{5}
+    & \parbox[c]{1.3cm}{\raggedright\textbf{Language}\\[-2pt]{\small Level}}
+    & \langdots{5} \\[6pt]
+  \parbox[c]{1.3cm}{\raggedright\textbf{Language}\\[-2pt]{\small Level}}
+    & \langdots{3}
+    & \parbox[c]{1.3cm}{\raggedright\textbf{Language}\\[-2pt]{\small Level}}
+    & \langdots{1}
+    & \parbox[c]{1.3cm}{\raggedright\textbf{Language}\\[-2pt]{\small Level}}
+    & \langdots{1} \\
+\end{tabular}
+\renewcommand{\arraystretch}{1}
+
+
+\end{paracol}
+
+
+
+
+\end{document}
